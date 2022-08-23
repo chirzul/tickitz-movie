@@ -1,15 +1,11 @@
 const model = {}
 const db = require('../config/db')
 const format = require('pg-format')
-const cloudinary = require('../middlewares/cloudinary')
+const cloudinary = require('../helpers/cloudinary')
 
 model.addMovie = async (data) => {
   try {
-    const upload = await cloudinary.uploader.upload(data.path, {
-      folder: 'tickitz_movie',
-      use_filename: true,
-      unique_filename: false
-    })
+    const upload = await cloudinary.uploadFile(data.path)
     await db.query(
       'INSERT INTO public.movies (title, genres, release_date, duration, director, casts, synopsis, img) VALUES($1, $2, $3, $4, $5, $6, $7, $8)',
       [
@@ -72,24 +68,12 @@ model.updateMovie = async (data) => {
   try {
     let img = ''
     if (data.path) {
-      img = await db.query('SELECT * FROM public.movies WHERE movie_id=$1', [
-        data.movie_id
-      ])
-      img = `tickitz${
-        img.rows[0].img
-          .split('tickitz')[1]
-          .split('.png')[0]
-          .split('.jpg')[0]
-          .split('.jpeg')[0]
-      }`
-      await cloudinary.uploader.destroy(img, (result) => {
-        console.log(result)
-      })
-      const upload = await cloudinary.uploader.upload(data.path, {
-        folder: 'tickitz_movie',
-        use_filename: true,
-        unique_filename: false
-      })
+      const movie = await db.query(
+        'SELECT * FROM public.movies WHERE movie_id=$1',
+        [data.movie_id]
+      )
+      await cloudinary.destroyFile(movie)
+      const upload = await cloudinary.uploadFile(data.path)
       img = upload.secure_url
     }
     await db.query(
@@ -133,20 +117,11 @@ model.countRows = async () => {
 
 model.deleteMovie = async (data) => {
   try {
-    let img = await db.query('SELECT * FROM public.movies WHERE movie_id=$1', [
-      data.movie_id
-    ])
-    img = `tickitz${
-      img.rows[0].img
-        .split('tickitz')[1]
-        .split('.png')[0]
-        .split('.jpg')[0]
-        .split('.jpeg')[0]
-    }`
-    console.log(img)
-    await cloudinary.uploader.destroy(img, (result) => {
-      console.log(result)
-    })
+    const movie = await db.query(
+      'SELECT * FROM public.movies WHERE movie_id=$1',
+      [data.movie_id]
+    )
+    await cloudinary.destroyFile(movie)
     await db.query('DELETE FROM public.movies WHERE movie_id=$1', [
       data.movie_id
     ])
