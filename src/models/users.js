@@ -90,7 +90,7 @@ model.changePassword = async (data) => {
 
 model.deleteUser = async (data) => {
   try {
-    await db.query('DELETE FROM public.users WHERE user_id=$1', [data.user_id])
+    await db.query('DELETE FROM public.users WHERE user_id=$1', [data.username])
     return 'data berhasil dihapus'
   } catch (error) {
     return error

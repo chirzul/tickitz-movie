@@ -54,12 +54,8 @@ ctrl.changePassword = async (req, res) => {
 
 ctrl.deleteUser = async (req, res) => {
   try {
-    if (req.decode.role === 'admin') {
-      const data = await model.deleteUser(req.params)
-      return response(res, 200, data)
-    } else {
-      return response(res, 401, 'Anda tidak memiliki akses', true)
-    }
+    const data = await model.deleteUser(req.decode)
+    return response(res, 200, data)
   } catch (error) {
     return response(res, 500, 'Terjadi kesalahan', true)
   }
